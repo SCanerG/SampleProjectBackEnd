@@ -5,7 +5,7 @@ namespace SampleProjectBackEnd.Infrastructure.Persistence.Repositories
 {
     public class ProductRepository : RepositoryBase<Product>, IProductRepository
     {
-        public ProductRepository(PersistenceContext context) : base(context)
+        public ProductRepository(ApplicationDbContext context) : base(context)
         {
         }
 
@@ -15,4 +15,6 @@ namespace SampleProjectBackEnd.Infrastructure.Persistence.Repositories
         //     return await _dbSet.Where(p => p.Stock < 10).ToListAsync();
         // }
     }
+
+
 }

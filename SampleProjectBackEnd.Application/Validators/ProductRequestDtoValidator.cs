@@ -1,17 +1,11 @@
-﻿using FluentValidation;
-using SampleProjectBackEnd.Application.Features.Products.Commands;
-using SampleProjectBackEnd.Application.Features.Products.Commands.CreateCommand;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using FluentValidation;
+using SampleProjectBackEnd.Application.DTOs.Requests;
 
 namespace SampleProjectBackEnd.Application.Validators
 {
-    public class CreateProductCommandValidator : AbstractValidator<CreateProductCommand>
+    public class ProductRequestDtoValidator : AbstractValidator<ProductRequestDto>
     {
-        public CreateProductCommandValidator()
+        public ProductRequestDtoValidator()
         {
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage("Ürün adı boş olamaz.")
@@ -22,6 +16,9 @@ namespace SampleProjectBackEnd.Application.Validators
 
             RuleFor(x => x.Stock)
                 .GreaterThanOrEqualTo(0).WithMessage("Stok miktarı negatif olamaz.");
+
+            RuleFor(x => x.CategoryId)
+                .GreaterThan(0).WithMessage("Geçerli bir kategori seçilmelidir.");
         }
     }
 }

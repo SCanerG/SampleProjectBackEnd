@@ -1,6 +1,8 @@
 ﻿using SampleProjectBackEnd.Application.Common.Results;
 using SampleProjectBackEnd.Application.DTOs.Requests;
 using SampleProjectBackEnd.Application.DTOs.Responses;
+using SampleProjectBackEnd.Application.Interfaces.Repositories;
+using SampleProjectBackEnd.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace SampleProjectBackEnd.Application.Interfaces.Services
 {
-    public interface IProductService
+    public interface IProductService 
     {
         Task<IDataResult<IEnumerable<ProductResponseDto>>> GetAllAsync();
         Task<IDataResult<ProductResponseDto>> GetByIdAsync(int id);
@@ -17,4 +19,6 @@ namespace SampleProjectBackEnd.Application.Interfaces.Services
         Task<IDataResult<ProductResponseDto>> UpdateAsync(int id, ProductRequestDto dto);
         Task<IResult> DeleteAsync(int id);
     }
+  
+
 }

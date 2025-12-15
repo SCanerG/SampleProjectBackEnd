@@ -12,7 +12,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Application services
 builder.Services.AddValidatorsFromAssembly(typeof(CreateProductCommandValidator).Assembly);
-builder.Services.AddMediatR(typeof(CreateProductCommandValidator).Assembly);
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssemblyContaining<Program>();
+});
+
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 // Infrastructure

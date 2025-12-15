@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 
 namespace SampleProjectBackEnd.Infrastructure.Persistence.Repositories
 {
-    public class RepositoryBase<T> : IAsyncRepository<T> where T : class
+    public class RepositoryBase<T> : IRepository<T> where T : class
     {
-        protected readonly PersistenceContext _context;
+        protected readonly ApplicationDbContext _context;
         protected readonly DbSet<T> _dbSet;
 
-        public RepositoryBase(PersistenceContext context)
+        public RepositoryBase(ApplicationDbContext context)
         {
             _context = context;
             _dbSet = context.Set<T>();

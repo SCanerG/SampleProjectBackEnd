@@ -10,6 +10,7 @@ namespace SampleProjectBackEnd.Application.Features.Products.Commands.CreateComm
         public string Description { get; set; }    // Ürün açıklaması
         public decimal Price { get; set; }         // Fiyat
         public int Stock { get; set; }             // Stok
+        public int CategoryId { get; set; }  // ✔ eklendi
     }
 }
 

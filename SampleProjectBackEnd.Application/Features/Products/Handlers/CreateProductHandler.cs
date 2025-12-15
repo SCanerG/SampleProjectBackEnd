@@ -2,6 +2,7 @@
 using SampleProjectBackEnd.Application.Common.Results;
 using SampleProjectBackEnd.Application.DTOs.Responses;
 using SampleProjectBackEnd.Application.Features.Products.Commands;
+using SampleProjectBackEnd.Application.Features.Products.Commands.CreateCommand;
 using SampleProjectBackEnd.Application.Interfaces.Repositories;
 using SampleProjectBackEnd.Domain.Entities;
 using System;
@@ -25,7 +26,13 @@ namespace SampleProjectBackEnd.Application.Features.Products.Handlers
         {
             try
             {
-                var product = new Product(request.Name, request.Price, request.Stock);
+                var product = new Product(
+                    request.Name,
+                    request.Description,
+                    request.Price,
+                    request.Stock,
+                    request.CategoryId
+                );
                 await _productRepository.AddAsync(product);
                 await _productRepository.SaveChangesAsync();
 
@@ -34,8 +41,8 @@ namespace SampleProjectBackEnd.Application.Features.Products.Handlers
                     Id = product.Id,
                     Name = product.Name,
                     Price = product.Price,
-                    Stock = product.Stock,
-                    CreatedAt = product.CreatedAt
+                    Stock = product.Stock ,
+                    CategoryId = product.CategoryId
                 };
 
                 return new SuccessDataResult<ProductResponseDto>(dto, "Ürün başarıyla eklendi.");

@@ -3,47 +3,60 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
 
-using SampleProjectBackEnd.Domain.Entities;
 using SampleProjectBackEnd.Infrastructure.Identity;
-using SampleProjectBackEnd.Infrastructure.Identity.Services;
 using SampleProjectBackEnd.Infrastructure.Persistence;
-using SampleProjectBackEnd.Infrastructure.Persistence.Repositories;
 using SampleProjectBackEnd.Infrastructure.Token;
+
 using SampleProjectBackEnd.Application.Interfaces.Repositories;
 using SampleProjectBackEnd.Application.Interfaces.Services;
 
-public static class DependencyInjection
+using SampleProjectBackEnd.Infrastructure.Persistence.Repositories;
+using SampleProjectBackEnd.Infrastructure.Identity.Services;
+using SampleProjectBackEnd.Application.Services;
+
+
+namespace SampleProjectBackEnd.Infrastructure
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    public static class DependencyInjection
     {
-        // 🔹 DbContexts
-        services.AddDbContext<PersistenceContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
-
-        // ✅ IdentityContext mutlaka eklenmeli
-        services.AddDbContext<IdentityContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
-
-        // 🔹 Identity
-        services.AddIdentity<AppUser, IdentityRole<int>>(opt =>
+        public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-            opt.Password.RequiredLength = 6;
-            opt.Password.RequireNonAlphanumeric = false;
-            opt.Password.RequireUppercase = false;
-        })
-        .AddEntityFrameworkStores<IdentityContext>()
-        .AddDefaultTokenProviders();
+            // 🔹 Tek DbContext (Identity + Domain Entities)
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
-        // 🔹 JWT
-        services.Configure<JwtSettings>(options =>
-            configuration.GetSection("JwtSettings").Bind(options));
-        services.AddScoped<JwtTokenHelper>();
-        services.AddScoped<IAuthService, IdentityService>();
 
-        // 🔹 Repository - UnitOfWork
-        services.AddScoped<IProductRepository, ProductRepository>();
-        services.AddScoped<IUnitOfWork, UnitOfWork>();
+            // 🔹 Identity (ApplicationUser kullanıyoruz)
+            services.AddIdentity<ApplicationUser, IdentityRole<int>>(options =>
+            {
+                options.Password.RequiredLength = 6;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+            })
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();
 
-        return services;
+
+            // 🔹 JWT
+            services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
+            services.AddScoped<ITokenService, JwtTokenHelper>();
+
+
+            // 🔹 Auth Service (IdentityService → Application IAuthService'i karşılar)
+            services.AddScoped<IAuthService, IdentityService>();
+
+
+            // 🔹 Repositories
+            services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<ICategoryService, CategoryService>();
+
+
+            // 🔹 Unit of Work
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+
+            return services;
+        }
     }
 }

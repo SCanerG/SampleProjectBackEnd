@@ -1,0 +1,39 @@
+services:
+  sampleprojectbackend.api:
+    image: ${DOCKER_REGISTRY-}sampleprojectbackendapi
+    container_name: sampleprojectbackend_api
+    build:
+      context: .
+      dockerfile: SampleProjectBackEnd.Api/Dockerfile
+    ports:
+      - "5000:8080"
+      - "5001:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=db;Database=SampleProject;User Id=scg;Password=1355;TrustServerCertificate=True;
+    depends_on:
+      - db
+    networks:
+      - sampleproject_network
+
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sampleprojectbackend_db
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=1355
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+    networks:
+      - sampleproject_network
+
+volumes:
+  mssql_data:
+
+
+networks:
+  sampleproject_network:
+    driver: bridge

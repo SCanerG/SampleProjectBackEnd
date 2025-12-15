@@ -1,44 +1,40 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using SampleProjectBackEnd.Application.Common.Results;
 using SampleProjectBackEnd.Application.DTOs.Requests;
+using SampleProjectBackEnd.Application.DTOs.Responses;
 using SampleProjectBackEnd.Application.Interfaces.Services;
 using SampleProjectBackEnd.Domain.Entities;
-using SampleProjectBackEnd.Infrastructure.Token;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using SampleProjectBackEnd.Infrastructure.Persistence;
 
 namespace SampleProjectBackEnd.Infrastructure.Identity.Services
 {
-    public class IdentityService:IAuthService
+    public class IdentityService : IAuthService
     {
-        private readonly UserManager<AppUser> _userManager;
-        private readonly SignInManager<AppUser> _signInManager;
-        private readonly JwtTokenHelper _jwtTokenHelper;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ITokenService _tokenService;
+        private readonly ApplicationDbContext _context;
 
         public IdentityService(
-            UserManager<AppUser> userManager,
-            SignInManager<AppUser> signInManager,
-            JwtTokenHelper jwtTokenHelper)
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
+            ITokenService tokenService,
+            ApplicationDbContext context)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _jwtTokenHelper = jwtTokenHelper;
+            _tokenService = tokenService;
+            _context = context;
         }
 
         public async Task<IResult> RegisterAsync(UserRegisterRequest request)
         {
-            // 1 - E-posta var mi kontrol et
             var existingUser = await _userManager.FindByEmailAsync(request.Email);
             if (existingUser != null)
-            {
-                return new ErrorResult("Bu email zaten kayitli.");
-            }
+                return new ErrorResult("Bu email zaten kayıtlı.");
 
-            // 2 - Kullanici olustur
-            var user = new AppUser
+            var user = new ApplicationUser
             {
                 FullName = request.FullName,
                 UserName = request.Email,
@@ -47,41 +43,83 @@ namespace SampleProjectBackEnd.Infrastructure.Identity.Services
 
             var createResult = await _userManager.CreateAsync(user, request.Password);
 
-            // 3 - Hata varsa detaylarini dondur
             if (!createResult.Succeeded)
             {
                 var errors = string.Join(" | ", createResult.Errors.Select(e => e.Description));
                 return new ErrorResult(errors);
             }
 
-            // 4 - (Opsiyonel) rol atama, onay maili vs. buraya gelir
-
-            return new SuccessResult("Kullanici basariyla olusturuldu.");
+            return new SuccessResult("Kullanıcı başarıyla oluşturuldu.");
         }
 
-        public async Task<IDataResult<string>> LoginAsync(UserLoginRequest request)
+        public async Task<IDataResult<TokenDto>> LoginAsync(UserLoginRequest request)
         {
-            // 1 - Kullanici var mi
             var user = await _userManager.FindByEmailAsync(request.Email);
             if (user == null)
-            {
-                return new ErrorDataResult<string>("Kullanici bulunamadi.");
-            }
+                return new ErrorDataResult<TokenDto>("Kullanıcı bulunamadı.");
 
-            // 2 - Sifre dogru mu
             var signInResult = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
             if (!signInResult.Succeeded)
-            {
-                return new ErrorDataResult<string>("Email veya sifre hatali.");
-            }
+                return new ErrorDataResult<TokenDto>("Email veya şifre hatalı.");
 
-            // 3 - Rollerini al
+            return await CreateTokenForUser(user);
+        }
+
+        public async Task<IDataResult<TokenDto>> RefreshTokenAsync(string token)
+        {
+            var refreshToken = await _context.RefreshTokens
+                .FirstOrDefaultAsync(r => r.Token == token);
+
+            if (refreshToken == null)
+                return new ErrorDataResult<TokenDto>("Geçersiz Refresh Token.");
+
+            if (!refreshToken.IsActive)
+                return new ErrorDataResult<TokenDto>("Refresh Token süresi dolmuş veya iptal edilmiş.");
+
+            var user = await _userManager.FindByIdAsync(refreshToken.UserId.ToString());
+            if (user == null)
+                return new ErrorDataResult<TokenDto>("Kullanıcı bulunamadı.");
+
+            var newTokens = await CreateTokenForUser(user);
+
+            // Revoke old token
+            refreshToken.Revoke(newTokens.Data.RefreshToken);
+            _context.RefreshTokens.Update(refreshToken);
+            await _context.SaveChangesAsync();
+
+            return newTokens;
+        }
+
+        private async Task<IDataResult<TokenDto>> CreateTokenForUser(ApplicationUser user)
+        {
             var roles = await _userManager.GetRolesAsync(user);
+            var tokenDto = _tokenService.GenerateToken(user.Id, user.Email!, user.UserName!, roles);
 
-            // 4 - Token olustur
-            var token = _jwtTokenHelper.GenerateToken(user, roles);
+            var refreshToken = new RefreshToken(
+                user.Id,
+                tokenDto.RefreshToken,
+                DateTime.UtcNow.AddDays(7) // 7 gün geçerli
+            );
 
-            return new SuccessDataResult<string>(token, "Giris basarili.");
+            await _context.RefreshTokens.AddAsync(refreshToken);
+            await _context.SaveChangesAsync();
+
+            return new SuccessDataResult<TokenDto>(tokenDto, "Giriş başarılı.");
+        }
+
+        public async Task<IResult> RevokeRefreshTokenAsync(string token)
+        {
+            var refreshToken = await _context.RefreshTokens
+                .FirstOrDefaultAsync(r => r.Token == token);
+
+            if (refreshToken == null)
+                return new ErrorResult("Token bulunamadı.");
+
+            refreshToken.Revoke();
+            _context.RefreshTokens.Update(refreshToken);
+            await _context.SaveChangesAsync();
+
+            return new SuccessResult("Token iptal edildi.");
         }
     }
 }

@@ -9,14 +9,16 @@ namespace SampleProjectBackEnd.Infrastructure.Persistence
 {
     public class UnitOfWork : IUnitOfWork, IDisposable
     {
-        private readonly PersistenceContext _context;
+        private readonly ApplicationDbContext _context;
 
         public IProductRepository Products { get; }
+        public ICategoryRepository Categories { get; }
 
-        public UnitOfWork(PersistenceContext context, IProductRepository productRepository)
+        public UnitOfWork(ApplicationDbContext context, IProductRepository productRepository, ICategoryRepository categoryRepository)
         {
             _context = context;
             Products = productRepository;
+            Categories = categoryRepository;
         }
 
         public async Task<int> CommitAsync()
@@ -27,6 +29,11 @@ namespace SampleProjectBackEnd.Infrastructure.Persistence
         public void Dispose()
         {
             _context.Dispose();
+        }
+
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            return _context.SaveChangesAsync(cancellationToken);
         }
     }
 }

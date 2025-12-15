@@ -5,17 +5,17 @@ namespace SampleProjectBackEnd.Domain.Entities
     public class RefreshToken : BaseEntity<int>
     {
         public string Token { get; private set; } = string.Empty;
-        public string UserId { get; private set; } = string.Empty;
+        public int UserId { get; private set; } // int olarak güncellendi
         public DateTime Expires { get; private set; }
         public bool Revoked { get; private set; }
         public string? ReplacedByToken { get; private set; }
 
         private RefreshToken() { } // EF için boş ctor
 
-        public RefreshToken(string userId, string token, DateTime expires)
+        public RefreshToken(int userId, string token, DateTime expires)
         {
-            if (string.IsNullOrWhiteSpace(userId))
-                throw new ArgumentException("UserId boş olamaz.");
+            if (userId <= 0)
+                throw new ArgumentException("UserId geçersiz.");
             if (string.IsNullOrWhiteSpace(token))
                 throw new ArgumentException("Token boş olamaz.");
             if (expires <= DateTime.UtcNow)

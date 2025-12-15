@@ -30,7 +30,8 @@ namespace SampleProjectBackEnd.Application.Features.Products.Commands.CreateProd
                 request.Name,
                 request.Description,
                 request.Price,
-                request.Stock
+                request.Stock,
+                request.CategoryId
             );
 
             await _productRepository.AddAsync(product);
@@ -43,7 +44,8 @@ namespace SampleProjectBackEnd.Application.Features.Products.Commands.CreateProd
                 Name = product.Name,
                 Description = product.Description,
                 Price = product.Price,
-                Stock = product.Stock
+                Stock = product.Stock,
+                CategoryId = product.CategoryId
             };
 
             return new SuccessDataResult<ProductResponseDto>(dto, "Product created successfully.");

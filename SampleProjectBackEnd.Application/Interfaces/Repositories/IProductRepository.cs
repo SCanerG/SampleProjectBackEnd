@@ -7,13 +7,9 @@ using System.Threading.Tasks;
 
 namespace SampleProjectBackEnd.Application.Interfaces.Repositories
 {
-    public interface IProductRepository 
+    public interface IProductRepository : IRepository<Product>
     {
-        Task<IEnumerable<Product>> GetAllAsync();
-        Task<Product?> GetByIdAsync(int id);
-        Task AddAsync(Product product);
-        Task UpdateAsync(Product product);
-        Task DeleteAsync(Product product);
-        Task SaveChangesAsync();
+       
     }
+
 }

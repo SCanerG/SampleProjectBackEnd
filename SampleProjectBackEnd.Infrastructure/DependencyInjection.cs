@@ -20,10 +20,17 @@ namespace SampleProjectBackEnd.Infrastructure
     public static class DependencyInjection
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
-        {
-            // 🔹 Tek DbContext (Identity + Domain Entities)
+        {//MSSQL
+         //services.AddDbContext<ApplicationDbContext>(options =>
+         //    options.UseSqlServer(configuration.GetConnectionString("DefaultConnectionMSSQL")));
+
+
+            //MYSQL
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+    options.UseMySql(
+        configuration.GetConnectionString("DefaultConnectionMYSQL"),
+        ServerVersion.AutoDetect(configuration.GetConnectionString("DefaultConnectionMYSQL"))
+    ));
 
 
             // 🔹 Identity (ApplicationUser kullanıyoruz)

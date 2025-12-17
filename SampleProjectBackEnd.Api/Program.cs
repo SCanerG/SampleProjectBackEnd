@@ -11,7 +11,7 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Application services
-builder.Services.AddValidatorsFromAssembly(typeof(CreateProductCommandValidator).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(ProductRequestDtoValidator).Assembly);
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssemblyContaining<Program>();

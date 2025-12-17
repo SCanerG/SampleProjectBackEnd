@@ -11,27 +11,29 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Server=db;Database=SampleProject;User Id=scg;Password=1355;TrustServerCertificate=True;
+      - ConnectionStrings__DefaultConnectionMYSQL=Server=db;Port=3306;Database=sampledb;Uid=appuser;Pwd=1355;
     depends_on:
       - db
     networks:
       - sampleproject_network
 
   db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: mysql:latest
     container_name: sampleprojectbackend_db
     environment:
-      - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=1355
+      MYSQL_ROOT_PASSWORD: 1355
+      MYSQL_DATABASE: sampledb
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: 1355
     ports:
-      - "1433:1433"
+      - "3306:3306"
     volumes:
-      - mssql_data:/var/opt/mssql
+      - mysql_data:/var/lib/mysql
     networks:
       - sampleproject_network
 
 volumes:
-  mssql_data:
+  mysql_data:
 
 
 networks:

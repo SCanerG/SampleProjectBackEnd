@@ -18,15 +18,13 @@ services:
       - sampleproject_network
 
   db:
-    image: mysql:latest
+    image: mysql:8.0
     container_name: sampleprojectbackend_db
     environment:
       MYSQL_ROOT_PASSWORD: 1355
       MYSQL_DATABASE: sampledb
       MYSQL_USER: appuser
       MYSQL_PASSWORD: 1355
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
